@@ -1,0 +1,15 @@
+{
+  "name": "rabbitsearch",
+  "version": "0.0.0",
+  "devDependencies": {
+    "wrangler": "2.9.1"
+  },
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler publish"
+  },
+  "dependencies": {
+    "hono": "^2.7.7"
+  }
+}
