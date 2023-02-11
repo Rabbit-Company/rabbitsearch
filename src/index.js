@@ -79,7 +79,7 @@ async function search(query, type = 'search'){
 }
 
 router.use('*', cors({
-    origin: ['http://rabbitsearch.org', 'https://rabbitsearch.net'],
+    origin: ['https://rabbitsearch.org', 'https://rabbitsearch.net'],
     allowHeaders: ['*'],
     allowMethods: ['POST', 'GET', 'OPTIONS'],
     maxAge: 86400,
