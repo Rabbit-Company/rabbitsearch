@@ -63,10 +63,20 @@ async function search(query){
 	}
 }
 
+async function searchImages(query){
+	try{
+		const options = { headers: { 'Ocp-Apim-Subscription-Key': env.BING_IMAGES_KEY} };
+		const response = await fetch("https://api.bing.microsoft.com/v7.0/images/search?" + query, options);
+		return await response.json();
+	}catch{
+		return null;
+	}
+}
+
 router.post('/search', async request => {
 	env = request.env;
 	let query = "q=";
-	
+
 	let knownBot = request.req.headers.get('x-known-bot') || 'false';
 	let threatScore = request.req.headers.get('x-threat-score') || 0;
 	if(knownBot === 'true' || threatScore > 10){
@@ -99,6 +109,45 @@ router.post('/search', async request => {
 	let data = await search(query);
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
 	await setValue('search_' + searchHash, JSON.stringify(data), 864000, 864000);
+	return jsonResponse({"error": 0, "info": "success", "data": data});
+});
+
+router.post('/searchImages', async request => {
+	env = request.env;
+	let query = "q=";
+
+	let knownBot = request.req.headers.get('x-known-bot') || 'false';
+	let threatScore = request.req.headers.get('x-threat-score') || 0;
+	if(knownBot === 'true' || threatScore > 10){
+		return jsonResponse({ "error": 1050, "info": "Bots aren't allowed to use this API endpoint."});
+	}
+
+	const input = request.req.query('q');
+	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
+	query += encodeURIComponent(input);
+
+	const count = 20;
+	query += "&count=" + count;
+
+	let page = request.req.query('p');
+	page = Number.parseInt(page);
+	if(isNaN(page)) page = 1;
+	if(page < 1 || page > 10) page = 1;
+	query += "&offset=" + (count * (page - 1));
+
+	let country = request.req.query('c');
+	if(typeof(country) !== 'string' || country.length == 0){
+		country = request.req.headers.get('cf-ipcountry');
+	}
+	query += "&cc=" + country + "&setLang=" + country;
+
+	let searchHash = await generateHash(query);
+	let result = await getValue('searchImages_' + searchHash);
+	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
+
+	let data = await searchImages(query);
+	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
+	await setValue('searchImages_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
