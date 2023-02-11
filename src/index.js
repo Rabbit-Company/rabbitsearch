@@ -53,40 +53,24 @@ async function deleteValue(key){
 	await cache.delete("https://api.rabbitsearch.org?key=" + key);
 }
 
-async function search(query){
-	try{
-		const options = { headers: { 'Ocp-Apim-Subscription-Key': env.BING_SEARCH_KEY} };
-		const response = await fetch("https://api.bing.microsoft.com/v7.0/search?" + query, options);
-		return await response.json();
-	}catch{
-		return null;
-	}
-}
+async function search(query, type = 'search'){
+	let secretKey = env.BING_SEARCH_KEY;
+	let endpoint = "https://api.bing.microsoft.com/v7.0/search?";
 
-async function searchImages(query){
-	try{
-		const options = { headers: { 'Ocp-Apim-Subscription-Key': env.BING_IMAGES_KEY} };
-		const response = await fetch("https://api.bing.microsoft.com/v7.0/images/search?" + query, options);
-		return await response.json();
-	}catch{
-		return null;
+	if(type === 'images'){
+		secretKey = env.BING_IMAGES_KEY;
+		endpoint = "https://api.bing.microsoft.com/v7.0/images/search?";
+	}else if(type === 'videos'){
+		secretKey = env.BING_VIDEOS_KEY;
+		endpoint = "https://api.bing.microsoft.com/v7.0/videos/search?";
+	}else if(type === 'news'){
+		secretKey = env.BING_NEWS_KEY;
+		endpoint = "https://api.bing.microsoft.com/v7.0/news/search?";
 	}
-}
 
-async function searchVideos(query){
 	try{
-		const options = { headers: { 'Ocp-Apim-Subscription-Key': env.BING_VIDEOS_KEY} };
-		const response = await fetch("https://api.bing.microsoft.com/v7.0/videos/search?" + query, options);
-		return await response.json();
-	}catch{
-		return null;
-	}
-}
-
-async function searchNews(query){
-	try{
-		const options = { headers: { 'Ocp-Apim-Subscription-Key': env.BING_NEWS_KEY} };
-		const response = await fetch("https://api.bing.microsoft.com/v7.0/news/search?" + query, options);
+		const options = { headers: { 'Ocp-Apim-Subscription-Key': secretKey} };
+		const response = await fetch(endpoint + query, options);
 		return await response.json();
 	}catch{
 		return null;
@@ -165,7 +149,7 @@ router.post('/searchImages', async request => {
 	let result = await getValue('searchImages_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
-	let data = await searchImages(query);
+	let data = await search(query, 'images');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
 	await setValue('searchImages_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
@@ -204,7 +188,7 @@ router.post('/searchVideos', async request => {
 	let result = await getValue('searchVideos_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
-	let data = await searchVideos(query);
+	let data = await search(query, 'videos');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
 	await setValue('searchVideos_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
@@ -243,7 +227,7 @@ router.post('/searchNews', async request => {
 	let result = await getValue('searchNews_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
-	let data = await searchNews(query);
+	let data = await search(query, 'news');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
 	await setValue('searchNews_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
