@@ -116,6 +116,8 @@ router.get('/search', async request => {
 	}
 	query += "&cc=" + country + "&setLang=" + country;
 
+	query += "&answerCount=1&promote=Webpages";
+
 	let searchHash = await generateHash(query);
 	let result = await getValue('search_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
