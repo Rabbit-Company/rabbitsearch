@@ -87,7 +87,7 @@ router.use('*', cors({
   })
 );
 
-router.post('/search', async request => {
+router.get('/search', async request => {
 	env = request.env;
 	let query = "q=";
 
@@ -126,7 +126,7 @@ router.post('/search', async request => {
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
-router.post('/searchImages', async request => {
+router.get('/searchImages', async request => {
 	env = request.env;
 	let query = "q=";
 
@@ -165,7 +165,7 @@ router.post('/searchImages', async request => {
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
-router.post('/searchVideos', async request => {
+router.get('/searchVideos', async request => {
 	env = request.env;
 	let query = "q=";
 
@@ -204,7 +204,7 @@ router.post('/searchVideos', async request => {
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
-router.post('/searchNews', async request => {
+router.get('/searchNews', async request => {
 	env = request.env;
 	let query = "q=";
 
