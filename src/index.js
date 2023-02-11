@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 const router = new Hono();
 
 let env;
@@ -76,6 +77,15 @@ async function search(query, type = 'search'){
 		return null;
 	}
 }
+
+router.use('*', cors({
+    origin: ['http://rabbitsearch.org', 'https://rabbitsearch.net'],
+    allowHeaders: ['*'],
+    allowMethods: ['POST', 'GET', 'OPTIONS'],
+    maxAge: 86400,
+    credentials: true,
+  })
+);
 
 router.post('/search', async request => {
 	env = request.env;
