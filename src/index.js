@@ -54,7 +54,7 @@ async function deleteValue(key){
 	await cache.delete("https://api.rabbitsearch.org?key=" + key);
 }
 
-async function search(query, type = 'search'){
+async function search(query, type = 'general'){
 	let secretKey = env.BING_SEARCH_KEY;
 	let endpoint = "https://api.bing.microsoft.com/v7.0/search?";
 
@@ -87,7 +87,7 @@ router.use('*', cors({
   })
 );
 
-router.get('/search', async request => {
+router.get('/searchGeneral', async request => {
 	env = request.env;
 	let query = "q=";
 
