@@ -142,7 +142,7 @@ router.get('/searchImages', async request => {
 	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
 	query += encodeURIComponent(input);
 
-	const count = 20;
+	const count = 50;
 	query += "&count=" + count;
 
 	let page = request.req.query('p');
