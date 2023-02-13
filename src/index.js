@@ -78,6 +78,29 @@ async function search(query, type = 'general'){
 	}
 }
 
+async function searchAI(query){
+	let secretKey = env.OPENAI_KEY;
+	let endpoint = "https://api.openai.com/v1/completions";
+
+	const data = {
+		'model': 'text-ada-001',
+		'prompt': query,
+		'temperature': 0.5,
+		'max_tokens': 50,
+		'top_p': 1,
+		'frequency_penalty': 0,
+		'presence_penalty': 0
+	};
+
+	try{
+		const options = { 'method': 'POST', 'headers': { 'Authorization': 'Bearer ' + secretKey, 'Content-Type': 'application/json'}, body: JSON.stringify(data)};
+		const response = await fetch(endpoint, options);
+		return await response.json();
+	}catch{
+		return null;
+	}
+}
+
 router.use('*', cors({
     origin: ['https://rabbitsearch.org', 'https://rabbitsearch.net'],
     allowHeaders: ['*'],
@@ -242,6 +265,24 @@ router.get('/searchNews', async request => {
 	let data = await search(query, 'news');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
 	await setValue('searchNews_' + searchHash, JSON.stringify(data), 259200, 259200);
+	return jsonResponse({"error": 0, "info": "success", "data": data});
+});
+
+router.get('/searchAI', async request => {
+	env = request.env;
+
+	let knownBot = request.req.headers.get('x-known-bot') || 'false';
+	let threatScore = request.req.headers.get('x-threat-score') || 0;
+	if(knownBot === 'true' || threatScore > 10){
+		return jsonResponse({ "error": 1050, "info": "Bots aren't allowed to use this API endpoint."});
+	}
+
+	const input = request.req.query('q');
+	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
+	if(input.length >= 100) return jsonResponse({"error": 1100, "info": "Query is too long!"});
+
+	let data = await searchAI(input);
+	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch results."});
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
