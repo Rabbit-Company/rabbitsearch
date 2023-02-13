@@ -7,7 +7,15 @@ binding = "KV"
 id = "69dc3dfbdb0843a4be0f762799387c12"
 
 [vars]
+#
+# BING API SETTINGS
+#
 # Don't forget to set the bing search key with: wrangler secret put BING_SEARCH_KEY
-# Don't forget to set the bing search key with: wrangler secret put BING_IMAGES_KEY
-# Don't forget to set the bing search key with: wrangler secret put BING_VIDEOS_KEY
-# Don't forget to set the bing search key with: wrangler secret put BING_NEWS_KEY
+# Don't forget to set the bing images key with: wrangler secret put BING_IMAGES_KEY
+# Don't forget to set the bing videos key with: wrangler secret put BING_VIDEOS_KEY
+# Don't forget to set the bing news key with: wrangler secret put BING_NEWS_KEY
+
+#
+# OPENAI API SETTINGS (https://openai.com/api/)
+#
+# Don't forget to set the openai key with: wrangler secret put OPENAI_KEY
