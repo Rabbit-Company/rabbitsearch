@@ -268,6 +268,10 @@ router.get('/searchNews', async request => {
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
+/*
+
+Disabled OPENAI
+
 router.get('/searchAI', async request => {
 	env = request.env;
 
@@ -285,5 +289,6 @@ router.get('/searchAI', async request => {
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch results."});
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
+*/
 
 export default router;
