@@ -241,7 +241,7 @@ router.get('/searchNews', async request => {
 
 	let data = await search(query, 'news');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchNews_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('searchNews_' + searchHash, JSON.stringify(data), 259200, 259200);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
