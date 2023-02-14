@@ -153,12 +153,12 @@ router.get('/searchGeneral', async request => {
 	query += "&answerCount=1&promote=Webpages";
 
 	let searchHash = await generateHash(query);
-	let result = await getValue('search_' + market + '_' + safeSearch + '_' + searchHash);
+	let result = await getValue('searchGeneral_' + market + '_' + safeSearch + '_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query);
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('search_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('searchGeneral_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
