@@ -70,9 +70,12 @@ async function search(query, type = 'general'){
 	}
 
 	try{
+		let result = {};
 		const options = { headers: { 'Ocp-Apim-Subscription-Key': secretKey} };
 		const response = await fetch(endpoint + query, options);
-		return await response.json();
+		result = await response.json();
+		result.market = response.headers.get('BingAPIs-Market');
+		return result;
 	}catch{
 		return null;
 	}
@@ -139,6 +142,12 @@ router.get('/searchGeneral', async request => {
 	}
 	query += "&cc=" + country + "&setLang=" + country;
 
+	let safeSearch = request.req.query('s');
+	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
+		safeSearch = 'Moderate';
+	}
+	query += "&safeSearch=" + safeSearch;
+
 	query += "&answerCount=1&promote=Webpages";
 
 	let searchHash = await generateHash(query);
@@ -147,7 +156,7 @@ router.get('/searchGeneral', async request => {
 
 	let data = await search(query);
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('search_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('search_' + data.market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
@@ -180,13 +189,19 @@ router.get('/searchImages', async request => {
 	}
 	query += "&cc=" + country + "&setLang=" + country;
 
+	let safeSearch = request.req.query('s');
+	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
+		safeSearch = 'Moderate';
+	}
+	query += "&safeSearch=" + safeSearch;
+
 	let searchHash = await generateHash(query);
 	let result = await getValue('searchImages_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query, 'images');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchImages_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('searchImages_' + data.market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
@@ -219,13 +234,19 @@ router.get('/searchVideos', async request => {
 	}
 	query += "&cc=" + country + "&setLang=" + country;
 
+	let safeSearch = request.req.query('s');
+	if(typeof(safeSearch) !== 'string' || !['Moderate', 'Strict'].includes(safeSearch)){
+		safeSearch = 'Moderate';
+	}
+	query += "&safeSearch=" + safeSearch;
+
 	let searchHash = await generateHash(query);
 	let result = await getValue('searchVideos_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query, 'videos');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchVideos_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('searchVideos_' + data.market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
@@ -258,13 +279,19 @@ router.get('/searchNews', async request => {
 	}
 	query += "&cc=" + country + "&setLang=" + country;
 
+	let safeSearch = request.req.query('s');
+	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
+		safeSearch = 'Moderate';
+	}
+	query += "&safeSearch=" + safeSearch;
+
 	let searchHash = await generateHash(query);
 	let result = await getValue('searchNews_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query, 'news');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchNews_' + searchHash, JSON.stringify(data), 259200, 259200);
+	await setValue('searchNews_' + data.market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 259200, 259200);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
