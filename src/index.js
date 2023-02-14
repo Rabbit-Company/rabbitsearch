@@ -144,14 +144,6 @@ router.get('/searchGeneral', async request => {
 	}
 	query += "&mkt=" + market + "&setLang=" + market;
 
-	/*
-	let country = request.req.query('c');
-	if(typeof(country) !== 'string' || country.length == 0){
-		country = request.req.headers.get('cf-ipcountry');
-	}
-	query += "&cc=" + country + "&setLang=" + country;
-	*/
-
 	let safeSearch = request.req.query('s');
 	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
 		safeSearch = 'Moderate';
@@ -193,11 +185,11 @@ router.get('/searchImages', async request => {
 	if(page < 1 || page > 10) page = 1;
 	query += "&offset=" + (count * (page - 1));
 
-	let country = request.req.query('c');
-	if(typeof(country) !== 'string' || country.length == 0){
-		country = request.req.headers.get('cf-ipcountry');
+	let market = request.req.query('m');
+	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
+		market = 'en-WW';
 	}
-	query += "&cc=" + country + "&setLang=" + country;
+	query += "&mkt=" + market + "&setLang=" + market;
 
 	let safeSearch = request.req.query('s');
 	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
@@ -206,12 +198,12 @@ router.get('/searchImages', async request => {
 	query += "&safeSearch=" + safeSearch;
 
 	let searchHash = await generateHash(query);
-	let result = await getValue('searchImages_' + searchHash);
+	let result = await getValue('searchImages_' + market + '_' + safeSearch + '_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query, 'images');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchImages_' + data.market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('searchImages_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
@@ -238,11 +230,11 @@ router.get('/searchVideos', async request => {
 	if(page < 1 || page > 10) page = 1;
 	query += "&offset=" + (count * (page - 1));
 
-	let country = request.req.query('c');
-	if(typeof(country) !== 'string' || country.length == 0){
-		country = request.req.headers.get('cf-ipcountry');
+	let market = request.req.query('m');
+	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
+		market = 'en-WW';
 	}
-	query += "&cc=" + country + "&setLang=" + country;
+	query += "&mkt=" + market + "&setLang=" + market;
 
 	let safeSearch = request.req.query('s');
 	if(typeof(safeSearch) !== 'string' || !['Moderate', 'Strict'].includes(safeSearch)){
@@ -251,12 +243,12 @@ router.get('/searchVideos', async request => {
 	query += "&safeSearch=" + safeSearch;
 
 	let searchHash = await generateHash(query);
-	let result = await getValue('searchVideos_' + searchHash);
+	let result = await getValue('searchVideos_' + market + '_' + safeSearch + '_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query, 'videos');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchVideos_' + data.market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('searchVideos_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
@@ -283,11 +275,11 @@ router.get('/searchNews', async request => {
 	if(page < 1 || page > 10) page = 1;
 	query += "&offset=" + (count * (page - 1));
 
-	let country = request.req.query('c');
-	if(typeof(country) !== 'string' || country.length == 0){
-		country = request.req.headers.get('cf-ipcountry');
+	let market = request.req.query('m');
+	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
+		market = 'en-WW';
 	}
-	query += "&cc=" + country + "&setLang=" + country;
+	query += "&mkt=" + market + "&setLang=" + market;
 
 	let safeSearch = request.req.query('s');
 	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
@@ -296,12 +288,12 @@ router.get('/searchNews', async request => {
 	query += "&safeSearch=" + safeSearch;
 
 	let searchHash = await generateHash(query);
-	let result = await getValue('searchNews_' + searchHash);
+	let result = await getValue('searchNews_' + market + '_' + safeSearch + '_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query, 'news');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchNews_' + data.market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 259200, 259200);
+	await setValue('searchNews_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 259200, 259200);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
