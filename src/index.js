@@ -5,6 +5,8 @@ const router = new Hono();
 let env;
 const cache = caches.default;
 
+const availableMarkets = ['es-AR', 'en-AU', 'de-AT', 'nl-BE', 'fr-BE', 'pt-BR', 'en-CA', 'fr-CA', 'es-CL', 'zh-CN', 'da-DK', 'fi-FI', 'fr-FR', 'de-DE', 'zh-HK', 'en-IN', 'en-ID', 'it-IT', 'ja-JP', 'ko-KR', 'en-MY', 'es-MX', 'nl-NL', 'en-NZ', 'no-NO', 'en-PH', 'pl-PL', 'ru-RU', 'en-ZA', 'es-ES', 'sv-SE', 'fr-CH', 'de-CH', 'zh-TW', 'tr-TR', 'en-GB', 'en-US', 'es-US', 'en-WW'];
+
 function jsonResponse(json, statusCode = 200){
 	if(typeof(json) !== 'string') json = JSON.stringify(json);
 	return new Response(json, {
@@ -136,11 +138,19 @@ router.get('/searchGeneral', async request => {
 	if(page < 1 || page > 10) page = 1;
 	query += "&offset=" + (count * (page - 1));
 
+	let market = request.req.query('m');
+	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
+		market = 'en-WW';
+	}
+	query += "&mkt=" + market + "&setLang=" + market;
+
+	/*
 	let country = request.req.query('c');
 	if(typeof(country) !== 'string' || country.length == 0){
 		country = request.req.headers.get('cf-ipcountry');
 	}
 	query += "&cc=" + country + "&setLang=" + country;
+	*/
 
 	let safeSearch = request.req.query('s');
 	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
