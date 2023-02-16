@@ -1,4 +1,4 @@
-<h1 align="center">🔍 Rabbit Search Website 🔍</h1>
+<h1 align="center">🔍 Rabbit Search 🔍</h1>
 
 [![GitHub issues](https://img.shields.io/github/issues/Rabbit-Company/rabbitsearch?color=blue&style=for-the-badge)](https://github.com/Rabbit-Company/rabbitsearch/issues)
 [![GitHub stars](https://img.shields.io/github/stars/Rabbit-Company/rabbitsearch?style=for-the-badge)](https://github.com/Rabbit-Company/rabbitsearch/stargazers)
