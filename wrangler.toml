@@ -1,6 +1,6 @@
 name = "rabbitsearch"
 main = "src/index.js"
-compatibility_date = "2023-02-10"
+compatibility_date = "2023-06-08"
 
 [[kv_namespaces]]
 binding = "KV"
