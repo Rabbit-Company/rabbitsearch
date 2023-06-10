@@ -1,21 +1,11 @@
-name = "rabbitsearch"
+name = "rabbitsearch2"
 main = "src/index.js"
 compatibility_date = "2023-06-08"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "501ca2b196b1438f816c1698e3e4c5fb"
+id = "8e181ff489f44d55821a0768d4d262ab"
 
 [vars]
-#
-# BING API SETTINGS
-#
-# Don't forget to set the bing search key with: wrangler secret put BING_SEARCH_KEY
-# Don't forget to set the bing images key with: wrangler secret put BING_IMAGES_KEY
-# Don't forget to set the bing videos key with: wrangler secret put BING_VIDEOS_KEY
-# Don't forget to set the bing news key with: wrangler secret put BING_NEWS_KEY
-
-#
-# OPENAI API SETTINGS (https://openai.com/api/)
-#
-# Don't forget to set the openai key with: wrangler secret put OPENAI_KEY
+# Don't forget to set the brave api key with: wrangler secret put BRAVE_SEARCH_KEY
+# Don't forget to set the pexels api key with: wrangler secret put PEXELS_SEARCH_KEY

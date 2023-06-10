@@ -5,7 +5,7 @@ const router = new Hono();
 let env;
 const cache = caches.default;
 
-const availableMarkets = ['es-AR', 'en-AU', 'de-AT', 'nl-BE', 'fr-BE', 'pt-BR', 'en-CA', 'fr-CA', 'es-CL', 'zh-CN', 'da-DK', 'fi-FI', 'fr-FR', 'de-DE', 'zh-HK', 'en-IN', 'en-ID', 'it-IT', 'ja-JP', 'ko-KR', 'en-MY', 'es-MX', 'nl-NL', 'en-NZ', 'no-NO', 'en-PH', 'pl-PL', 'ru-RU', 'en-ZA', 'es-ES', 'sv-SE', 'fr-CH', 'de-CH', 'zh-TW', 'tr-TR', 'en-GB', 'en-US', 'es-US'];
+const availableCountries = ['ar', 'au', 'at', 'be', 'br', 'ca', 'cl', 'dk', 'fi', 'fr', 'de', 'hk', 'in', 'id', 'it', 'jp', 'kr', 'my', 'mx', 'nl', 'nz', 'no', 'cn', 'pl', 'pt', 'ph', 'ru', 'sa', 'za', 'es', 'se', 'ch', 'tw', 'tr', 'gb', 'us'];
 
 function jsonResponse(json, statusCode = 200){
 	if(typeof(json) !== 'string') json = JSON.stringify(json);
@@ -57,49 +57,16 @@ async function deleteValue(key){
 }
 
 async function search(query, type = 'general'){
-	let secretKey = env.BING_SEARCH_KEY;
-	let endpoint = "https://api.bing.microsoft.com/v7.0/search?";
+	let endpoint = "https://api.search.brave.com/res/v1/web/search?";
+	let options = { headers: { 'X-Subscription-Token': env.BRAVE_SEARCH_KEY } };
 
 	if(type === 'images'){
-		secretKey = env.BING_IMAGES_KEY;
-		endpoint = "https://api.bing.microsoft.com/v7.0/images/search?";
-	}else if(type === 'videos'){
-		secretKey = env.BING_VIDEOS_KEY;
-		endpoint = "https://api.bing.microsoft.com/v7.0/videos/search?";
-	}else if(type === 'news'){
-		secretKey = env.BING_NEWS_KEY;
-		endpoint = "https://api.bing.microsoft.com/v7.0/news/search?";
+		endpoint = "https://api.pexels.com/v1/search?";
+		options = { headers: { 'Authorization': env.PEXELS_SEARCH_KEY } };
 	}
 
 	try{
-		let result = {};
-		const options = { headers: { 'Ocp-Apim-Subscription-Key': secretKey} };
 		const response = await fetch(endpoint + query, options);
-		result = await response.json();
-		result.market = response.headers.get('BingAPIs-Market');
-		return result;
-	}catch{
-		return null;
-	}
-}
-
-async function searchAI(query){
-	let secretKey = env.OPENAI_KEY;
-	let endpoint = "https://api.openai.com/v1/completions";
-
-	const data = {
-		'model': 'text-ada-001',
-		'prompt': query,
-		'temperature': 0.5,
-		'max_tokens': 50,
-		'top_p': 1,
-		'frequency_penalty': 0,
-		'presence_penalty': 0
-	};
-
-	try{
-		const options = { 'method': 'POST', 'headers': { 'Authorization': 'Bearer ' + secretKey, 'Content-Type': 'application/json'}, body: JSON.stringify(data)};
-		const response = await fetch(endpoint, options);
 		return await response.json();
 	}catch{
 		return null;
@@ -107,7 +74,7 @@ async function searchAI(query){
 }
 
 router.use('*', cors({
-    origin: ['https://rabbitsearch.org', 'https://rabbitsearch.net'],
+    origin: ['https://rabbitsearch.org', 'https://rabbitsearch.net', 'https://dev.rabbitsearch.org', 'https://dev.rabbitsearch.net'],
     allowHeaders: ['*'],
     allowMethods: ['POST', 'GET', 'OPTIONS'],
     maxAge: 86400,
@@ -115,7 +82,7 @@ router.use('*', cors({
   })
 );
 
-router.get('/searchGeneral', async request => {
+router.get('/search', async request => {
 	env = request.env;
 	let query = "q=";
 
@@ -129,7 +96,7 @@ router.get('/searchGeneral', async request => {
 	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
 	query += encodeURIComponent(input.toLowerCase());
 
-	const count = 50;
+	const count = 20;
 	query += "&count=" + count;
 
 	let page = request.req.query('p');
@@ -138,35 +105,31 @@ router.get('/searchGeneral', async request => {
 	if(page < 1 || page > 10) page = 1;
 	query += "&offset=" + (count * (page - 1));
 
-	let market = request.req.query('m');
-	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
-		market = request.req.headers.get('cf-ipcountry');
-		query += "&cc=" + market + "&setLang=" + market;
-	}else{
-		query += "&mkt=" + market + "&setLang=" + market;
+	let country = request.req.query('m');
+	if(typeof(country) !== 'string' || !availableCountries.includes(country)){
+		country = 'us';
 	}
+	query += "&country=" + country;
 
 	let safeSearch = request.req.query('s');
-	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
-		safeSearch = 'Moderate';
+	if(typeof(safeSearch) !== 'string' || !['off', 'moderate', 'strict'].includes(safeSearch)){
+		safeSearch = 'moderate';
 	}
-	query += "&safeSearch=" + safeSearch;
-
-	query += "&answerCount=1&promote=Webpages";
+	query += "&safesearch=" + safeSearch;
 
 	let searchHash = await generateHash(query);
-	let result = await getValue('searchGeneral_' + market + '_' + safeSearch + '_' + searchHash);
+	let result = await getValue('search_' + country + '_' + safeSearch + '_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query);
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchGeneral_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('search_' + country + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
 
-router.get('/searchImages', async request => {
+router.get('/images', async request => {
 	env = request.env;
-	let query = "q=";
+	let query = "query=";
 
 	let knownBot = request.req.headers.get('x-known-bot') || 'false';
 	let threatScore = request.req.headers.get('x-threat-score') || 0;
@@ -178,154 +141,23 @@ router.get('/searchImages', async request => {
 	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
 	query += encodeURIComponent(input.toLowerCase());
 
-	const count = 100;
-	query += "&count=" + count;
+	const count = 20;
+	query += "&per_page=" + count;
 
 	let page = request.req.query('p');
 	page = Number.parseInt(page);
 	if(isNaN(page)) page = 1;
 	if(page < 1 || page > 10) page = 1;
-	query += "&offset=" + (count * (page - 1));
+	query += "&page=" + page;
 
-	let market = request.req.query('m');
-	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
-		market = request.req.headers.get('cf-ipcountry');
-		query += "&cc=" + market + "&setLang=" + market;
-	}else{
-		query += "&mkt=" + market + "&setLang=" + market;
-	}
-
-	let safeSearch = request.req.query('s');
-	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
-		safeSearch = 'Moderate';
-	}
-	query += "&safeSearch=" + safeSearch;
-
-	let searchHash = await generateHash(query);
-	let result = await getValue('searchImages_' + market + '_' + safeSearch + '_' + searchHash);
+	let searchHash = await generateHash(query, 'images');
+	let result = await getValue('image_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
 	let data = await search(query, 'images');
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchImages_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue('image_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
 });
-
-router.get('/searchVideos', async request => {
-	env = request.env;
-	let query = "q=";
-
-	let knownBot = request.req.headers.get('x-known-bot') || 'false';
-	let threatScore = request.req.headers.get('x-threat-score') || 0;
-	if(knownBot === 'true' || threatScore > 10){
-		return jsonResponse({ "error": 1050, "info": "Bots aren't allowed to use this API endpoint."});
-	}
-
-	const input = request.req.query('q');
-	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
-	query += encodeURIComponent(input.toLowerCase());
-
-	const count = 100;
-	query += "&count=" + count;
-
-	let page = request.req.query('p');
-	page = Number.parseInt(page);
-	if(isNaN(page)) page = 1;
-	if(page < 1 || page > 10) page = 1;
-	query += "&offset=" + (count * (page - 1));
-
-	let market = request.req.query('m');
-	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
-		market = request.req.headers.get('cf-ipcountry');
-		query += "&cc=" + market + "&setLang=" + market;
-	}else{
-		query += "&mkt=" + market + "&setLang=" + market;
-	}
-
-	let safeSearch = request.req.query('s');
-	if(typeof(safeSearch) !== 'string' || !['Moderate', 'Strict'].includes(safeSearch)){
-		safeSearch = 'Moderate';
-	}
-	query += "&safeSearch=" + safeSearch;
-
-	let searchHash = await generateHash(query);
-	let result = await getValue('searchVideos_' + market + '_' + safeSearch + '_' + searchHash);
-	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
-
-	let data = await search(query, 'videos');
-	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchVideos_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
-	return jsonResponse({"error": 0, "info": "success", "data": data});
-});
-
-router.get('/searchNews', async request => {
-	env = request.env;
-	let query = "q=";
-
-	let knownBot = request.req.headers.get('x-known-bot') || 'false';
-	let threatScore = request.req.headers.get('x-threat-score') || 0;
-	if(knownBot === 'true' || threatScore > 10){
-		return jsonResponse({ "error": 1050, "info": "Bots aren't allowed to use this API endpoint."});
-	}
-
-	const input = request.req.query('q');
-	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
-	query += encodeURIComponent(input.toLowerCase());
-
-	const count = 50;
-	query += "&count=" + count;
-
-	let page = request.req.query('p');
-	page = Number.parseInt(page);
-	if(isNaN(page)) page = 1;
-	if(page < 1 || page > 10) page = 1;
-	query += "&offset=" + (count * (page - 1));
-
-	let market = request.req.query('m');
-	if(typeof(market) !== 'string' || !availableMarkets.includes(market)){
-		market = request.req.headers.get('cf-ipcountry');
-		query += "&cc=" + market + "&setLang=" + market;
-	}else{
-		query += "&mkt=" + market + "&setLang=" + market;
-	}
-
-	let safeSearch = request.req.query('s');
-	if(typeof(safeSearch) !== 'string' || !['Off', 'Moderate', 'Strict'].includes(safeSearch)){
-		safeSearch = 'Moderate';
-	}
-	query += "&safeSearch=" + safeSearch;
-
-	let searchHash = await generateHash(query);
-	let result = await getValue('searchNews_' + market + '_' + safeSearch + '_' + searchHash);
-	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
-
-	let data = await search(query, 'news');
-	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('searchNews_' + market + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 259200, 259200);
-	return jsonResponse({"error": 0, "info": "success", "data": data});
-});
-
-/*
-
-Disabled OPENAI
-
-router.get('/searchAI', async request => {
-	env = request.env;
-
-	let knownBot = request.req.headers.get('x-known-bot') || 'false';
-	let threatScore = request.req.headers.get('x-threat-score') || 0;
-	if(knownBot === 'true' || threatScore > 10){
-		return jsonResponse({ "error": 1050, "info": "Bots aren't allowed to use this API endpoint."});
-	}
-
-	const input = request.req.query('q');
-	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
-	if(input.length >= 100) return jsonResponse({"error": 1100, "info": "Query is too long!"});
-
-	let data = await searchAI(input);
-	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch results."});
-	return jsonResponse({"error": 0, "info": "success", "data": data});
-});
-*/
 
 export default router;
