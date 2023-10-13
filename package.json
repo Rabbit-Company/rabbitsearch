@@ -2,7 +2,7 @@
   "name": "rabbitsearch",
   "version": "0.0.0",
   "devDependencies": {
-    "wrangler": "3.1.0"
+    "wrangler": "3.13.1"
   },
   "private": true,
   "scripts": {
@@ -10,6 +10,6 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
-    "hono": "^3.2.5"
+    "hono": "^3.7.6"
   }
 }

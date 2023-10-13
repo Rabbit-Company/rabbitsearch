@@ -1,11 +1,10 @@
-name = "rabbitsearch2"
+name = "rabbitsearch3"
 main = "src/index.js"
-compatibility_date = "2023-06-08"
+compatibility_date = "2023-10-13"
 
 [[kv_namespaces]]
 binding = "KV"
-id = "8e181ff489f44d55821a0768d4d262ab"
+id = "67c6c16db0e1423a83c52a3a6204cb47"
 
 [vars]
 # Don't forget to set the brave api key with: wrangler secret put BRAVE_SEARCH_KEY
-# Don't forget to set the pexels api key with: wrangler secret put PEXELS_SEARCH_KEY

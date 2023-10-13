@@ -61,8 +61,11 @@ async function search(query, type = 'general'){
 	let options = { headers: { 'X-Subscription-Token': env.BRAVE_SEARCH_KEY } };
 
 	if(type === 'images'){
-		endpoint = "https://api.pexels.com/v1/search?";
-		options = { headers: { 'Authorization': env.PEXELS_SEARCH_KEY } };
+		endpoint = "https://api.search.brave.com/res/v1/images/search?";
+	}else if(type === 'videos'){
+		endpoint = "https://api.search.brave.com/res/v1/videos/search?";
+	}else if(type === 'news'){
+		endpoint = "https://api.search.brave.com/res/v1/news/search?";
 	}
 
 	try{
@@ -73,17 +76,7 @@ async function search(query, type = 'general'){
 	}
 }
 
-router.use('*', cors({
-    origin: ['https://rabbitsearch.org', 'https://rabbitsearch.net', 'https://dev.rabbitsearch.org', 'https://dev.rabbitsearch.net'],
-    allowHeaders: ['*'],
-    allowMethods: ['POST', 'GET', 'OPTIONS'],
-    maxAge: 86400,
-    credentials: true,
-  })
-);
-
-router.get('/search', async request => {
-	env = request.env;
+async function fetchResultsFromBrave(request, type = 'search'){
 	let query = "q=";
 
 	let knownBot = request.req.headers.get('x-known-bot') || 'false';
@@ -115,49 +108,46 @@ router.get('/search', async request => {
 	if(typeof(safeSearch) !== 'string' || !['off', 'moderate', 'strict'].includes(safeSearch)){
 		safeSearch = 'moderate';
 	}
+	if(type === 'images' && safeSearch === 'moderate') safeSearch = "strict";
 	query += "&safesearch=" + safeSearch;
 
 	let searchHash = await generateHash(query);
-	let result = await getValue('search_' + country + '_' + safeSearch + '_' + searchHash);
+	let result = await getValue(type + '_' + country + '_' + safeSearch + '_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
 
-	let data = await search(query);
+	let data = await search(query, type);
 	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('search_' + country + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
+	await setValue(type + '_' + country + '_' + safeSearch + '_' + searchHash, JSON.stringify(data), 864000, 864000);
 	return jsonResponse({"error": 0, "info": "success", "data": data});
+}
+
+router.use('*', cors({
+    origin: ['https://rabbitsearch.org', 'https://rabbitsearch.net', 'https://dev.rabbitsearch.org', 'https://dev.rabbitsearch.net'],
+    allowHeaders: ['*'],
+    allowMethods: ['POST', 'GET', 'OPTIONS'],
+    maxAge: 86400,
+    credentials: true,
+  })
+);
+
+router.get('/search', async request => {
+	env = request.env;
+	return await fetchResultsFromBrave(request, 'search');
 });
 
 router.get('/images', async request => {
 	env = request.env;
-	let query = "query=";
+	return await fetchResultsFromBrave(request, 'images');
+});
 
-	let knownBot = request.req.headers.get('x-known-bot') || 'false';
-	let threatScore = request.req.headers.get('x-threat-score') || 0;
-	if(knownBot === 'true' || threatScore > 10){
-		return jsonResponse({ "error": 1050, "info": "Bots aren't allowed to use this API endpoint."});
-	}
+router.get('/videos', async request => {
+	env = request.env;
+	return await fetchResultsFromBrave(request, 'videos');
+});
 
-	const input = request.req.query('q');
-	if(typeof(input) !== 'string' || input.length == 0) return jsonResponse({"error": 1100, "info": "Query is missing!"});
-	query += encodeURIComponent(input.toLowerCase());
-
-	const count = 20;
-	query += "&per_page=" + count;
-
-	let page = request.req.query('p');
-	page = Number.parseInt(page);
-	if(isNaN(page)) page = 1;
-	if(page < 1 || page > 10) page = 1;
-	query += "&page=" + page;
-
-	let searchHash = await generateHash(query, 'images');
-	let result = await getValue('image_' + searchHash);
-	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
-
-	let data = await search(query, 'images');
-	if(data == null) return jsonResponse({"error": 1105, "info": "Something went wrong while trying to fetch search results."});
-	await setValue('image_' + searchHash, JSON.stringify(data), 864000, 864000);
-	return jsonResponse({"error": 0, "info": "success", "data": data});
+router.get('/news', async request => {
+	env = request.env;
+	return await fetchResultsFromBrave(request, 'news');
 });
 
 export default router;
