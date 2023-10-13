@@ -111,6 +111,8 @@ async function fetchResultsFromBrave(request, type = 'search'){
 	if(type === 'images' && safeSearch === 'moderate') safeSearch = "strict";
 	query += "&safesearch=" + safeSearch;
 
+	if(type === 'search') query += "&result_filter=web";
+
 	let searchHash = await generateHash(query);
 	let result = await getValue(type + '_' + country + '_' + safeSearch + '_' + searchHash);
 	if(result !== null) return jsonResponse({"error": 0, "info": "success", "data": JSON.parse(result)});
